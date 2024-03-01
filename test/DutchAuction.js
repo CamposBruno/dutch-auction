@@ -85,11 +85,16 @@ describe("DutchAuction", function () {
       const overflow = previousPrice - currentPrice;
 
       expect(await NFT.ownerOf(NFT_ID)).eq(owner);
+
+      const sellerBalanceBefore = await ethers.provider.getBalance(owner);
       
       await expect(DutchAuction.connect(addr1).buy({ value : previousPrice }))
         .to.emit(DutchAuction, "Bought").withArgs(addr1, currentPrice - 1n, overflow + 1n); // 1n refers to 1 milisecond ellapsed running the test
 
+        const sellerBalanceAfter = await ethers.provider.getBalance(owner);
+
       expect(await NFT.ownerOf(NFT_ID)).eq(addr1);
+      expect(sellerBalanceAfter).eq(sellerBalanceBefore + currentPrice - 1n);
     });
   });
 
