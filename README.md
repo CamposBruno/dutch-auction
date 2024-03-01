@@ -1,6 +1,6 @@
-# ether-to-token-swap
+# dutch-auction
 
-Simple token swap contract to exchange ETH to any given token using Uniswap's V3 exact input single
+Simple dutch auction to sell and specific NFT
 
 Try running some of the following tasks:
 
