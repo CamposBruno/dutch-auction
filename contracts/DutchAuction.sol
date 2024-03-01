@@ -80,9 +80,6 @@ contract DutchAuction {
         require(block.timestamp > expiresAt, "Too soon to close auction");
 
         ended = true;
-                
-        (bool paySeller,) = seller.call{ value : address(this).balance }("");
-        require(paySeller, "Error paying seller");
 
         emit Closed();
     }
