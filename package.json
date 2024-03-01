@@ -1,0 +1,35 @@
+{
+  "name": "dutch-auction",
+  "version": "1.0.0",
+  "description": "Simple dutch auction to sell and specific NFT",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy": "npx hardhat run --network goerli scripts/deploy.js"
+  },
+  "keywords": [
+    "eth",
+    "nft",
+    "dutch",
+    "auction",
+    "crypto",
+    "hardhat",
+    "ethers",
+    "solidity"
+  ],
+  "author": "Bruno Campos",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "dotenv": "^16.4.5",
+    "dotenv-cli": "^7.3.0",
+    "ethers": "^6.11.1",
+    "hardhat": "^2.20.1",
+    "hardhat-gas-reporter": "^1.0.10"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
