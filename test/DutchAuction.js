@@ -2,6 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("DutchAuction", function () {
+  const DURATION = 3600 * 24 * 7 // seven days
   const STARTING_PRICE = 1e6;
   const DISCOUNT_RATE = 1n;
   const NFT_ID = 505;
@@ -30,7 +31,7 @@ describe("DutchAuction", function () {
     
     // Deploy and initialize DutchAuction contract
     const dutchAunctionContract = await ethers.getContractFactory("DutchAuction");
-    DutchAuction = await dutchAunctionContract.deploy(STARTING_PRICE, DISCOUNT_RATE, NFT_ADDRESS, NFT_ID);
+    DutchAuction = await dutchAunctionContract.deploy(NFT_ADDRESS, NFT_ID, STARTING_PRICE, DISCOUNT_RATE, DURATION);
     await DutchAuction.waitForDeployment();
     
     await NFT.approve(await DutchAuction.getAddress(), NFT_ID);
@@ -49,11 +50,24 @@ describe("DutchAuction", function () {
   
 
   describe("buy", () => {
-    it("Should not execute buy after auction ended", async function () {
+    it("Should not execute buy after auction ended by time", async function () {
       skip(3600 * 24 * 7); // seven days
 
       await expect(DutchAuction.buy({ value : ethers.parseEther('1') }))
         .to.be.revertedWith('Auction expired');
+    });
+
+    it("Should not execute buy after auction ended by sold", async function () {
+      skip(3600 * 24 * 1); // one day
+      const currentPrice = await DutchAuction.getPrice();
+
+      await DutchAuction.buy({ value : currentPrice });
+
+      await expect(DutchAuction.buy({ value : currentPrice }))
+        .to.be.revertedWith('Auction ended');
+
+      await expect(DutchAuction.closeAuction())
+        .to.be.revertedWith('Auction already ended');
     });
 
     it("Should revert if ETH sent is less than current price", async function () {
@@ -64,19 +78,18 @@ describe("DutchAuction", function () {
         .to.be.revertedWith('Send more ether');
     });
 
-    it("Should sell NFT and refund buyer", async function () {
+    it("Should sell NFT and refund buyer with proper values", async function () {
+      const previousPrice = await DutchAuction.getPrice();
       skip(3600 * 24 * 1); // one day
       const currentPrice = await DutchAuction.getPrice();
-      const amountSent = currentPrice + 10n;
-      const overflow = amountSent - currentPrice;
+      const overflow = previousPrice - currentPrice;
 
       expect(await NFT.ownerOf(NFT_ID)).eq(owner);
-
-      const tx = await DutchAuction.connect(addr1).buy({ value : amountSent  });
       
+      await expect(DutchAuction.connect(addr1).buy({ value : previousPrice }))
+        .to.emit(DutchAuction, "Bought").withArgs(addr1, currentPrice - 1n, overflow + 1n); // 1n refers to 1 milisecond ellapsed running the test
+
       expect(await NFT.ownerOf(NFT_ID)).eq(addr1);
-      expect(tx).to.emit(DutchAuction, "Bought")
-        .withArgs(addr1, currentPrice, overflow);
     });
   });
 
@@ -92,10 +105,22 @@ describe("DutchAuction", function () {
     });
 
     it("Should end auction after expiration", async function () {
-      skip(3600 * 24 * 7) // seven days;
+      skip(DURATION) // seven days;
       const closeAuction = await DutchAuction.connect(owner).closeAuction();
 
       expect(closeAuction).to.emit(DutchAuction, "Closed");
+    });
+  });
+
+  describe("fallback", () => { 
+    it("Should revert if attempt to call direclty", async function () {
+      const auctionAddress = await DutchAuction.getAddress();
+
+      await expect(owner.sendTransaction({ 
+        to: auctionAddress,
+        value: ethers.parseEther('1'),
+        data : ethers.randomBytes(10),
+      })).to.be.revertedWith("cannot call directly");
     });
   });
 });
