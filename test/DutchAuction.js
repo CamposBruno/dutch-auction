@@ -65,8 +65,6 @@ describe("DutchAuction", function () {
       await expect(DutchAuction.buy({ value : currentPrice }))
         .to.be.revertedWith('Auction ended');
 
-      await expect(DutchAuction.closeAuction())
-        .to.be.revertedWith('Auction already ended');
     });
 
     it("Should revert if ETH sent is less than current price", async function () {
@@ -94,25 +92,6 @@ describe("DutchAuction", function () {
 
       expect(await NFT.ownerOf(NFT_ID)).eq(addr1);
       expect(sellerBalanceAfter).eq(sellerBalanceBefore + currentPrice - 1n);
-    });
-  });
-
-  describe("closeAuction", () => {
-    it("Should revert if not called by seller", async function () {
-      await expect(DutchAuction.connect(addr1).closeAuction())
-        .to.be.revertedWith('Only seller can end auction');
-    });
-
-    it("Should revert if attempt to close auction before expiration", async function () {
-      await expect(DutchAuction.connect(owner).closeAuction())
-        .to.be.revertedWith('Too soon to close auction');
-    });
-
-    it("Should end auction after expiration", async function () {
-      skip(DURATION) // seven days;
-      const closeAuction = await DutchAuction.connect(owner).closeAuction();
-
-      expect(closeAuction).to.emit(DutchAuction, "Closed");
     });
   });
 

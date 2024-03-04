@@ -18,7 +18,6 @@ contract DutchAuction {
     uint256 private immutable duration;
 
     event Bought(address buyer, uint256 amount, uint256 refunded);
-    event Closed();
 
     constructor(
         address _nft,
@@ -72,16 +71,6 @@ contract DutchAuction {
         require(paySeller, "Error paying seller");
 
         emit Bought(msg.sender, currentPrice, refundAmount);
-    }
-
-    function closeAuction() external {
-        require(msg.sender == seller, "Only seller can end auction");
-        require(!ended, "Auction already ended");
-        require(block.timestamp > expiresAt, "Too soon to close auction");
-
-        ended = true;
-
-        emit Closed();
     }
 
     receive() payable external {
