@@ -47,7 +47,6 @@ describe("DutchAuction", function () {
       expect(await DutchAuction.getPrice()).eq(startingPrice - 7200n * DISCOUNT_RATE);
     });
   })
-  
 
   describe("buy", () => {
     it("Should not execute buy after auction ended by time", async function () {
